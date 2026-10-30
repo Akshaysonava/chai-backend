@@ -357,7 +357,25 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     if (!coverImageLocalPath) {
       throw new ApiError(400, "Avatar file is missing");
     }
-    //! TODO: delete old image - assignment
+    
+      // 1. Fetch current user to get the old cover image  URL
+  const currentUser = await User.findById(req.user?._id);
+
+  if (!currentUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+    // 2. Extract public ID from old cover image  URL (if it exists)
+  const oldCoverImageUrl = currentUser.coverImage;
+  if (oldCoverImageUrl) {
+    const oldCoverImagePublicId = oldCoverImageUrl.split("/").pop()?.split(".")[0];
+    
+    if (oldCoverImagePublicId) {
+      await deleteFromCloudinary(oldCoverImagePublicId);
+    }
+  }
+
+
 
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
