@@ -3,6 +3,7 @@ import {
   changeCurrentPassword,
   getCurrentUser,
   getUserChhanelProfile,
+  getWatchHistory,
   loginUser,
   logoutUser,
   refreshAccessToken,
@@ -38,8 +39,13 @@ router.route("/refresh_token").post(refreshAccessToken);
 router.route("/change_Password").post(verifyJWT, changeCurrentPassword);
 router.route("/current_user").post(verifyJWT, getCurrentUser);
 router.route("/update_details").post(verifyJWT, updateaccountDetails);
+
+
 router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar)
 router.route("/cover_image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage)
+
+
 router.route("/c/:username").get(verifyJWT, getUserChhanelProfile)
+router.route("/watch_history").get(verifyJWT, getWatchHistory)
 
 export default router;
