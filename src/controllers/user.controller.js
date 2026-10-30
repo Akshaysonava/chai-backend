@@ -97,33 +97,45 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-  // req body -> data
-  // username or email
-  // find the user
-  // password check
-  // access and refresh token
-  // send cookie
-
   const { email, username, password } = req.body;
 
+  // 1. Ensure at least one identifier (username OR email) is provided
   if (!username && !email) {
-    throw new ApiError(400, "Username or email is required ");
+    throw new ApiError(400, "Username or email is required");
   }
 
-  const user = await User.findOne({
-    $or: [{ username }, { email }],
-  });
+  // 2. Ensure password is provided
+  if (!password) {
+    throw new ApiError(400, "Password is required");
+  }
+
+  // 3. Dynamically build the search query based ONLY on provided fields
+  const searchQuery = [];
+  if (username) searchQuery.push({ username });
+  if (email) searchQuery.push({ email });
+
+  const user = await User.findOne({ $or: searchQuery });
 
   if (!user) {
-    throw new ApiError(404, "User doers not exist");
+    throw new ApiError(404, "User does not exist");
   }
 
+  // 4. Strict Validation: If BOTH username and email were provided in req.body,
+  // ensure BOTH match the database record (prevents logging in with an old/invalid username).
+  if (username && email) {
+    if (user.username !== username || user.email !== email) {
+      throw new ApiError(401, "Invalid credentials or outdated username/email");
+    }
+  }
+
+  // 5. Password check
   const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid user credentials ");
+    throw new ApiError(401, "Invalid user credentials");
   }
 
+  // 6. Generate tokens
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
     user._id
   );
@@ -149,7 +161,7 @@ const loginUser = asyncHandler(async (req, res) => {
           accessToken,
           refreshToken,
         },
-        "User logged In Successfully"
+        "User logged in successfully"
       )
     );
 });
@@ -251,6 +263,37 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse (200, req.user , "Current user fetched successfully"));
 });
 
+const updateaccountDetails = asyncHandler(async (req, res) => {
+  const {fullName, email, username} = req.body
+
+  if(!fullName || !email  || !username) {
+    throw new ApiError(400, "All fields are required ")
+  }
+
+  const user = User.findByIdAndUpdate(
+   req.user?._id,
+   {
+    $set: {
+      fullName, 
+      email,
+      username
+    }
+   } ,
+   {new: true}
+  ).select("-password")
+
+  const userUpdated = await User.findById(req.user?._id);
+userUpdated.fullName = fullName;
+   userUpdated.email = email;
+   userUpdated.username = username;
+
+  await userUpdated.save({ validateBeforeSave: false }); 
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, req.user, "Account details updated successfully "))
+})
+
 export {
   registerUser,
   loginUser,
@@ -258,4 +301,5 @@ export {
   refreshAccessToken,
   changeCurrentPassword,
   getCurrentUser,
+  updateaccountDetails
 };
