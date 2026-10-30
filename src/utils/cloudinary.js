@@ -1,7 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
-import { log } from "console";
 import fs from "fs";
-import { exit } from "process";
+
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -26,4 +25,19 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export { uploadOnCloudinary };
+
+// Function to delete an asset from Cloudinary using its URL or Public ID
+const deleteFromCloudinary = async (publicId) => {
+  try {
+    if (!publicId) return null;
+    const response = await cloudinary.uploader.destroy(publicId);
+    return response;
+  } catch (error) {
+    console.error("Error deleting old image from Cloudinary:", error);
+    return null;
+  }
+};
+
+
+
+export { uploadOnCloudinary, deleteFromCloudinary };
