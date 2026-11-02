@@ -286,6 +286,7 @@ const updateaccountDetails = asyncHandler(async (req, res) => {
     { new: true }
   ).select("-password");
 
+  // self code for save updated value in db 
   const userUpdated = await User.findById(req.user?._id);
   userUpdated.fullName = fullName;
   userUpdated.email = email;
