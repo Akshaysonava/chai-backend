@@ -9,6 +9,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
+
+// Generate access and refresh tokens for a user
 const generateAccessAndRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -28,6 +30,8 @@ const generateAccessAndRefreshToken = async (userId) => {
   }
 };
 
+
+// Register user
 export const registerUser = asyncHandler(async (req, res) => {
   //  get user details from frontend
   // validation - not empty
@@ -101,6 +105,8 @@ export const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, "User registered Successfully "));
 });
 
+
+// Login user
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
 
@@ -173,6 +179,8 @@ export const loginUser = asyncHandler(async (req, res) => {
     );
 });
 
+
+// Logout user
 export const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
@@ -199,6 +207,8 @@ export const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User looged out "));
 });
 
+
+// Refresh access token
 export const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
@@ -249,6 +259,8 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
+
+// Change current password
 export const changeCurrentPassword = asyncHandler(async (req, res) => {
   const { oldpassword, newPassword, confirmPassword } = req.body;
 
@@ -275,12 +287,16 @@ export const changeCurrentPassword = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password changed Successfully"));
 });
 
+
+// Get current user
 export const getCurrentUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
 });
 
+
+// Update account details
 export const updateaccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email, username } = req.body;
 
@@ -315,6 +331,8 @@ export const updateaccountDetails = asyncHandler(async (req, res) => {
     );
 });
 
+
+// Update user avatar
 export const updateUserAvatar = asyncHandler(async (req, res) => {
   {
     const avatarLocalPath = req.file?.path;
@@ -367,6 +385,8 @@ export const updateUserAvatar = asyncHandler(async (req, res) => {
   }
 });
 
+
+// Update user cover image
 export const updateUserCoverImage = asyncHandler(async (req, res) => {
   {
     const coverImageLocalPath = req.file?.path;
@@ -421,6 +441,7 @@ export const updateUserCoverImage = asyncHandler(async (req, res) => {
   }
 });
 
+// Get user channel profile
 export const getUserChhanelProfile = asyncHandler(async (req, res) => {
   const { username } = req.params;
 
@@ -498,6 +519,8 @@ export const getUserChhanelProfile = asyncHandler(async (req, res) => {
     );
 });
 
+
+// Get watch history
 export const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
