@@ -119,6 +119,7 @@ export const loginUser = asyncHandler(async (req, res) => {
   if (username) searchQuery.push({ username });
   if (email) searchQuery.push({ email });
 
+  // here $or is used to search for either username or email in the database
   const user = await User.findOne({ $or: searchQuery });
 
   if (!user) {
@@ -212,11 +213,13 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    const user = await User.findById(decodedToken?._id);
+    //  [ ?._id ] => Optional chaining operator to safely access the _id property of decodedToken. If decodedToken is null or undefined, it will return undefined instead of throwing an error.
+    const user = await User.findById(decodedToken?._id);  
 
     if (!user) {
       throw new ApiError(401, "Invalid refresh token ");
     }
+
 
     if (incomingRefreshToken !== user?.refreshToken) {
       throw new ApiError(401, "Refresh token is expired or ussed ");
@@ -247,13 +250,21 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 export const changeCurrentPassword = asyncHandler(async (req, res) => {
-  const { oldpassword, newPassword } = req.body;
+  const { oldpassword, newPassword, confirmPassword } = req.body;
 
   const user = await User.findById(req.user?._id);
   const isPasswordCorrect = await user.isPasswordCorrect(oldpassword);
 
   if (!isPasswordCorrect) {
     throw new ApiError(400, "Invalid old Password");
+  }
+
+  if(! confirmPassword || !newPassword){
+    throw new ApiError(400, "New password and confirm password are required");
+  }
+
+  if (newPassword !== confirmPassword) {
+    throw new ApiError(400, "New password and confirm password do not match");
   }
 
   user.password = newPassword;
