@@ -452,12 +452,14 @@ export const getUserChhanelProfile = asyncHandler(async (req, res) => {
   const channel = await User.aggregate([
     // First Pipeline for match
     {
+      // here $match is used to filter documents in the User collection based on the provided username. It ensures that only the user with the specified username is selected for further processing in the aggregation pipeline.
       $match: {
         username: username?.toLowerCase(),
       },
     },
     // Second Pipeline for lookup subscribers
     {
+      // $lookup is used to perform a left outer join with another collection (in this case, the "subscriptions" collection) to retrieve related documents. It allows you to fetch the subscribers of the user by matching the user's _id with the channel field in the subscriptions collection. The result is stored in a new field called "subscribers" in the output documents.
       $lookup: {
         from: "sunbscriptions",
         localField: "_id",
@@ -476,6 +478,7 @@ export const getUserChhanelProfile = asyncHandler(async (req, res) => {
     },
     // 4 Pipeline for fields Add
     {
+      // $addFields is used to add new fields to the documents in the aggregation pipeline. In this case, it calculates the subscriberCount and channelsSubscriberdToCount by using the $size operator to count the number of elements in the subscribers and subscribedTo arrays, respectively. Additionally, it checks if the current user (req.user?._id) is present in the subscribers array to determine if the user is subscribed to the channel, setting the isSubscribed field accordingly.     
       $addFields: {
         subscriberCount: {
           $size: "$subscribers",
@@ -484,9 +487,12 @@ export const getUserChhanelProfile = asyncHandler(async (req, res) => {
           $size: "$subscribedTo",
         },
         isSubscribed: {
+          // Check if the current user is subscribed to the channel
           $cond: {
+            // here $in is used to check if the current user's _id (req.user?._id) is present in the subscribers array of the channel. If it is found, isSubscribed will be set to true; otherwise, it will be set to false.
+            // inuse for both array and objects 
             if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-            then: true,
+            then: true, 
             else: false,
           },
         },
@@ -494,13 +500,14 @@ export const getUserChhanelProfile = asyncHandler(async (req, res) => {
     },
     //  5th Pipeline for final Projection
     {
+      // $project is used to specify which fields should be included or excluded in the final output documents. In this case, it selects specific fields to be returned in the response, including fullName, username, subscriberCount, channelsSubscriberdToCount, isSubscribed, avatar, coverImage, and email. The -password and -refreshToken fields are excluded from the output to ensure sensitive information is not exposed.
       $project: {
         fullName: 1,
         username: 1,
         subscriberCount: 1,
         channelsSubscriberdToCount: 1,
         isSubscribed: 1,
-        avatar: 1,
+        avatar: 1, 
         coverImage: 1,
         email: 1,
       },
