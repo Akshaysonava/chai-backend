@@ -15,6 +15,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
+    // Store the refresh token in the user's document in the database
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
@@ -148,6 +149,7 @@ export const loginUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
+  // 7. Set cookies for access and refresh tokens
   const options = {
     httpOnly: true,
     secure: true,
@@ -188,6 +190,7 @@ export const logoutUser = asyncHandler(async (req, res) => {
     secure: true,
   };
 
+  // Clear the cookies and send a response indicating successful logout
   return res
     .status(200)
     .clearCookie("accessToken", options)
